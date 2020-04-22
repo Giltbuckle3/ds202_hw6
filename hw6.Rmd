@@ -1,5 +1,14 @@
+---
+title: "hw6.Rmd.Rmd"
+author: "Juan Simons, Github: Giltbuckle 3"
+date: "4/21/2020"
+output: html_document
+---
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
 ```
 
 ## Top dogs
@@ -10,6 +19,31 @@ In this homework, you will try to reproduce the fantastic infographic for [top d
 
 1. Import the data and clean appropriately. To read in the data, you can use `readxl::read_xlsx('fileNameHere', sheet='sheetNameHere')`. Required data are in the sheets `Best in show` and `Best in show full sheet`. Take extra care on the column names and the first few rows of the data frame after read in.
 
+```{r}
+best=readxl::read_xlsx('KIB - Best in Show (public).xlsx', sheet='Best in show')
+bestf=readxl::read_xlsx('KIB - Best in Show (public).xlsx', sheet='Best in show full sheet')
+```
+
+
+```{r}
+#Lets start by extracting the data we need for the plot.
+bestf <- bestf%>% select(1,3,5,6,11,32)
+bestf <- bestf[-(1:3),]
+
+#lets get rid of those pesky NA values and rename our columns 
+bestf<- na.omit(bestf)
+names(bestf)<- c("breed","category","score","popularity","intelligence","size")
+
+#Now to convert some of the column types.
+bestf$size <- as.factor(bestf$size)
+
+bestf$intelligence <- as.numeric(bestf$intelligence)
+bestf$score <- as.numeric(bestf$score)
+bestf$popularity <- as.numeric(bestf$popularity)
+
+#This will determine wether a dog is intelligent based off their score in the inteligence column. True for intelligent, false for dumb
+bestf <- bestf %>% mutate(intelligence = (intelligence<45))
+```
 2. Create a graphics similar to the  [top dogs](https://informationisbeautiful.net/visualizations/best-in-show-whats-the-top-data-dog/) figure. Your figure needs to display the following information with appropriate plotting elements:
 
 - breed of dog
@@ -19,6 +53,15 @@ In this homework, you will try to reproduce the fantastic infographic for [top d
 - popularity
 - intelligence of the dog
 - appropriate legends & explanation
+
+```{r}
+bestf%>% ggplot(aes(x = score, y = popularity, color = category, label = breed, shape = intelligence, size = size)) + geom_point()+ geom_text(check_overlap = TRUE, size = 2.5, hjust = 1, vjust = 1) + theme_bw() + labs(title = "Best in Show: Ultimate Datadog", x = "Score", y ="Popularity")+ geom_hline(yintercept=80) + geom_vline(xintercept=2.33)+ annotate(geom='text', x=1.3, y=1, label='Overrated', size=4) +
+  annotate(geom='text', x=3.4, y=1, label='Hot Dogs!', size=4) +
+  annotate(geom='text', x=1.3, y=170, label='Rightly Ignored', size=4) +
+  annotate(geom='text', x=3.4, y=170, label='Overlooked', size=4)+scale_color_brewer(palette="Dark2")
+```
+
+The graph above reprents where each dog landed in the ratings. There are 4 general categories based off of each sector of the graph and they are: Rightly ignored, Overrated, Hot Dogs and Overlooked. 
 
 Hints and Notes:
 
